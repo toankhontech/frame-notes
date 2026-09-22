@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { clamp } from "./review";
 import { exportReview } from "./export";
+import { hashFile } from "./hashFile";
+import demoUrl from "../assets/demo.mp4";
 
 const DEMO = {
   name: "Gravity Type",
@@ -22,8 +24,10 @@ export default function useReview() {
   const video = useRef(null),
     objectUrl = useRef(null),
     initialized = useRef(false),
-    fileBusy = useRef(false);
-  const [source, setSource] = useState("./demo.mp4");
+    fileBusy = useRef(false),
+    sourceFile = useRef(null),
+    exportController = useRef(null);
+  const [source, setSource] = useState(demoUrl);
   const [meta, setMeta] = useState(DEMO);
   const [ready, setReady] = useState(false),
     [playing, setPlaying] = useState(false);
@@ -51,6 +55,7 @@ export default function useReview() {
   }, [dirty, editor]);
   useEffect(
     () => () => {
+      exportController.current?.abort();
       if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
     },
     [],
@@ -246,6 +251,7 @@ export default function useReview() {
       video.current.pause();
       const previous = objectUrl.current;
       objectUrl.current = url;
+      sourceFile.current = file;
       setReady(false);
       setSeeking(false);
       initialized.current = true;
@@ -273,6 +279,7 @@ export default function useReview() {
     }
   }
   function resetDemo() {
+    if (fileBusy.current) return;
     if (
       (dirty || editor) &&
       !window.confirm("Return to the demo? Your current notes will be cleared.")
@@ -282,7 +289,8 @@ export default function useReview() {
     setReady(false);
     initialized.current = false;
     setMeta(DEMO);
-    setSource("./demo.mp4");
+    sourceFile.current = null;
+    setSource(demoUrl);
     setTime(0);
     setNotes([{ ...SAMPLE }]);
     setSelected("sample");
@@ -299,19 +307,42 @@ export default function useReview() {
     }
   }
   async function doExport() {
-    if (busy || editor || !notes.length || !ready) return;
+    if (busy || fileBusy.current || editor || !notes.length || !ready) return;
+    fileBusy.current = true;
+    const controller = new AbortController();
+    exportController.current = controller;
     video.current.pause();
     setBusy(true);
     setError("");
     setStatus("Preparing review…");
     try {
-      await exportReview(meta, notes, setStatus);
+      let file = sourceFile.current;
+      if (!file) {
+        const response = await fetch(demoUrl, { signal: controller.signal });
+        if (!response.ok)
+          throw new Error("Could not read the demo source. Try again.");
+        file = await response.blob();
+      }
+      const fingerprint = await hashFile(file, {
+        signal: controller.signal,
+        onProgress: (value) => setStatus(`Identifying source video… ${value}%`),
+      });
+      exportController.current = null;
+      await exportReview({ ...meta, fingerprint }, notes, setStatus);
       setDirty(false);
-      setStatus("Review downloaded · Markdown, JSON and annotated frames.");
+      setStatus(
+        "Review downloaded · source fingerprint, notes and annotated frames.",
+      );
     } catch (err) {
-      setError(err.message);
-      setStatus("");
+      if (err.name !== "AbortError") setError(err.message);
+      setStatus(
+        err.name === "AbortError"
+          ? "Export cancelled. Your notes are still here."
+          : "",
+      );
     } finally {
+      exportController.current = null;
+      fileBusy.current = false;
       setBusy(false);
     }
   }
@@ -323,6 +354,7 @@ export default function useReview() {
   }, [speed, muted, source]);
   useEffect(() => {
     function keyboard(e) {
+      if (document.querySelector("dialog[open]")) return;
       if (e.key === "Escape" && editor) {
         setEditor(null);
         return;
@@ -383,6 +415,8 @@ export default function useReview() {
     openFile,
     resetDemo,
     doExport,
+    canCancelExport: busy && !!exportController.current,
+    cancelExport: () => exportController.current?.abort(),
     setPlaying,
     setTime,
     setSpeed,

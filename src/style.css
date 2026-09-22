@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   font-family: Arial, Helvetica, system-ui, sans-serif;
   color: #17191f;
   background: #f6f7f9;
@@ -7,6 +8,118 @@
   --blue: #086aeb;
   --line: #dce1e9;
   --muted: #626d82;
+}
+.project-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+.project-actions .button {
+  min-width: 88px;
+}
+.source-dialog {
+  width: min(560px, calc(100% - 32px));
+  max-height: calc(100svh - 32px);
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: #17191f;
+  box-shadow: 0 24px 80px #14243b33;
+}
+.source-dialog::backdrop {
+  background: #17243b80;
+}
+.source-heading {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+.source-heading h2 {
+  font-size: 25px;
+}
+.source-intro {
+  margin: 8px 0 26px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.source-file {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 24px;
+}
+.source-label {
+  font-size: 14px;
+  font-weight: 700;
+}
+.source-file .button {
+  justify-self: start;
+}
+.chosen-file {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.source-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.source-dialog progress {
+  width: 100%;
+  margin-top: 16px;
+  accent-color: var(--blue);
+}
+.source-result {
+  padding: 16px;
+  margin: 20px 0 0;
+  border: 1px solid #bfd7cd;
+  border-radius: 8px;
+  background: #edf8f2;
+  color: #165139;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.source-result strong {
+  display: block;
+  font-size: 18px;
+}
+.source-result p {
+  margin: 6px 0 12px;
+  font-size: 15px;
+}
+.source-result small {
+  font-size: 12px;
+}
+.source-result.mismatch {
+  border-color: #ebc2b3;
+  background: #fff2ed;
+  color: #81361d;
+}
+.source-result.unverified {
+  border-color: #d2d8e2;
+  background: #f1f4f8;
+  color: #3e4b60;
+}
+.source-footnote {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 22px 0 0;
+}
+@media (max-width: 540px) {
+  .source-dialog {
+    padding: 20px;
+  }
+  .source-heading h2 {
+    font-size: 22px;
+  }
+  .project-heading > .project-actions {
+    flex-shrink: 0;
+    max-width: 105px;
+  }
 }
 * {
   box-sizing: border-box;

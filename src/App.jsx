@@ -3,18 +3,20 @@ import Icon from "./components/Icon";
 import VideoStage from "./components/VideoStage";
 import Transport from "./components/Transport";
 import NotesPanel from "./components/NotesPanel";
+import SourceCheck from "./components/SourceCheck";
 import useReview from "./lib/useReview";
 export default function App() {
   const r = useReview(),
     fileInput = useRef(null),
-    [dragging, setDragging] = useState(false);
+    [dragging, setDragging] = useState(false),
+    [checking, setChecking] = useState(false);
   return (
     <div
       className="app"
       onDragOver={(e) => {
         if (e.dataTransfer.types.includes("Files")) {
           e.preventDefault();
-          setDragging(true);
+          if (!checking) setDragging(true);
         }
       }}
       onDragLeave={(e) => {
@@ -23,7 +25,7 @@ export default function App() {
       onDrop={(e) => {
         e.preventDefault();
         setDragging(false);
-        r.openFile(e.dataTransfer.files[0]);
+        if (!checking) r.openFile(e.dataTransfer.files[0]);
       }}
     >
       <header className="app-header">
@@ -71,15 +73,27 @@ export default function App() {
               {r.meta.duration.toFixed(1)}s
             </p>
           </div>
-          {!r.meta.demo && (
+          <div className="project-actions">
             <button
               className="button quiet"
               disabled={r.busy}
-              onClick={r.resetDemo}
+              onClick={() => {
+                r.video.current?.pause();
+                setChecking(true);
+              }}
             >
-              Back to demo
+              Check source
             </button>
-          )}
+            {!r.meta.demo && (
+              <button
+                className="button quiet"
+                disabled={r.busy}
+                onClick={r.resetDemo}
+              >
+                Back to demo
+              </button>
+            )}
+          </div>
         </div>
         {(r.status || r.error) && (
           <div
@@ -87,6 +101,11 @@ export default function App() {
             role={r.error ? "alert" : "status"}
           >
             <span>{r.error || r.status}</span>
+            {r.canCancelExport && (
+              <button className="button quiet" onClick={r.cancelExport}>
+                Cancel export
+              </button>
+            )}
             {r.removed && !r.error && (
               <button
                 className="button quiet"
@@ -173,6 +192,7 @@ export default function App() {
         </span>
         <img src="./brand/wordmark.png" alt="ToanKhonTech" />
       </footer>
+      {checking && <SourceCheck onClose={() => setChecking(false)} />}
       {dragging && (
         <div className="drop-overlay">
           <Icon name="folder" size={44} />

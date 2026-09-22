@@ -17,6 +17,20 @@ Frame Notes is a small browser tool for giving precise visual feedback on a reco
 
 Space plays/pauses, left/right arrows move by 0.1 seconds, and N adds a note at the center. Escape cancels an edit. Ctrl/Cmd+Enter saves it. Shortcuts do not run while typing in a field. You can edit notes, delete them, and undo the latest deletion.
 
+## Check a review’s source video
+
+New exports include a SHA-256 fingerprint of the complete video file in `review.json` and `review.md`. To compare a handoff with a video, click **Check source**, choose the exported `review.json` and the candidate video, then **Compare files**. The check does not change your open video or notes.
+
+- **Same source file:** the bytes match, including when the file has been renamed.
+- **Different source file:** a trim, re-encode, metadata edit, or other byte change produces a mismatch. Use the original source or make a new review.
+- **Source not verified:** a version 1 review without a fingerprint cannot identify the original file. Matching filenames and durations are insufficient.
+
+Hashing runs in a Web Worker, reads 4 MiB at a time, and can be cancelled. Changing either file or closing the dialog cancels the previous check and clears its result. JSON reviews are limited to 2 MiB; video hashing has no fixed size cap. Browser resources and codec support still limit video editing.
+
+This checks exact file identity, not visual similarity, and does not remap timestamps after an edit. A fingerprint is not a signature: it does not authenticate the review’s author or prove the metadata has not been modified.
+
+![Source check detecting a changed video](docs/source-check.png)
+
 ## What stays local
 
 Selected videos are read with browser object URLs. There is no upload endpoint, analytics, account, AI call, or backend. The app downloads its static files and demo clip from the hosting service. Notes and captured frames live in memory for the current tab; export before closing. ZIP files do not include the source video.
@@ -27,7 +41,7 @@ Selected videos are read with browser object URLs. There is no upload endpoint, 
 - Video support depends on the browser and codec. MP4/H.264 and WebM are good starting points. Large clips and many high-resolution snapshots can use substantial memory.
 - This is manual review. It does not find visual errors or evaluate model quality automatically.
 - The bundled note is illustrative. It is not a measured defect or benchmark result.
-- There is no saved project or review import yet. A successful export starts a browser download; check your download folder before closing the tab.
+- There is no saved project or note restoration yet; loading JSON in Check source only checks file identity. A successful export starts a browser download; check your download folder before closing the tab.
 
 ## Run locally
 
@@ -44,14 +58,16 @@ npm run build
 npm run preview
 ```
 
-React + Vite, native HTML video and Canvas, JSZip. Export metadata uses schema version 1, seconds from the source start, and normalized x/y coordinates from the top-left. Snapshot pixels are captured when a note is created, so editing its text keeps the original frame.
+React + Vite, native HTML video and Canvas, JSZip, and [@noble/hashes](https://github.com/paulmillr/noble-hashes) for incremental SHA-256. Export metadata uses schema version 2, seconds from the source start, and normalized x/y coordinates from the top-left. Snapshot pixels are captured when a note is created, so editing its text keeps the original frame.
 
 ## Validation
 
 Checked in desktop Chrome at 1672px and 1440px, and responsive emulation at 390px and 360px. The local-file flow, playback, 0.1s seek, keyboard note creation, edit/delete/undo, and ZIP download were exercised through the browser UI. Exported JSON and PNGs were inspected against the source clip. Unit tests cover time rounding, export field boundaries, Markdown escaping, and clamping. Mobile emulation is not a physical-device test.
 
+Source-check update: nine unit tests pass. Real Chrome file selection verified matching renamed bytes, a trimmed/re-encoded mismatch, old reviews without fingerprints, malformed JSON, and cancellation/replacement during hashing. Both demo and local-video ZIP fingerprints were compared with an independent SHA-256 calculation.
+
 ## Credits and license
 
 Implemented with Codex; the visual concept was made with ImageGen. The demo clip is an actual recording of [Gravity Type](https://github.com/toankhontech/gravity-type), another ToanKhonTech experiment.
 
-The original app code is MIT-licensed. ToanKhonTech brand files and the demo video remain ToanKhonTech assets and are excluded from that code license. The brand files are provided unchanged; this repository does not grant trademark rights. React/React DOM and JSZip retain their own licenses; see `public/THIRD_PARTY_LICENSES.txt`.
+The original app code is MIT-licensed. ToanKhonTech brand files and the demo video remain ToanKhonTech assets and are excluded from that code license. The brand files are provided unchanged; this repository does not grant trademark rights. React/React DOM, JSZip and @noble/hashes retain their own licenses; see `public/THIRD_PARTY_LICENSES.txt`.

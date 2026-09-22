@@ -27,13 +27,14 @@ export function escapeMarkdown(text) {
 }
 export function makeReview(meta, notes) {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     source: {
       name: meta.name,
       durationSeconds: meta.duration,
       width: meta.width,
       height: meta.height,
       demo: meta.demo,
+      fingerprint: meta.fingerprint,
     },
     timing:
       "Browser media time in seconds. Timestamps and 0.1s steps are not frame-accurate timecode.",
@@ -53,5 +54,5 @@ export function makeReview(meta, notes) {
 }
 export function markdown(review) {
   const s = review.source;
-  return `# Frame Notes review\n\nSource: ${escapeMarkdown(s.name)}${s.demo ? " (demo clip)" : ""}\n\n${s.width} × ${s.height} · ${timestamp(s.durationSeconds)}\n\n${review.timing}\n\n${review.coordinates}\n\n${review.notes.map((n) => `## ${n.number}. ${n.timestamp}\n\n${escapeMarkdown(n.text)}\n\n${n.illustrative ? "_Illustrative sample note._\n\n" : ""}Position: x=${n.x.toFixed(4)}, y=${n.y.toFixed(4)}\n\n![Annotated frame ${n.number}](${n.image})\n`).join("\n")}\nMade with Frame Notes by ToanKhonTech.\n`;
+  return `# Frame Notes review\n\nSource: ${escapeMarkdown(s.name)}${s.demo ? " (demo clip)" : ""}\n\n${s.width} × ${s.height} · ${timestamp(s.durationSeconds)}\n\n${s.fingerprint ? `Source SHA-256: \`${s.fingerprint.digest}\`\n\nFile size: ${s.fingerprint.byteLength} bytes. Checks exact file bytes, not visual similarity; timestamps are not remapped.\n\n` : ""}${review.timing}\n\n${review.coordinates}\n\n${review.notes.map((n) => `## ${n.number}. ${n.timestamp}\n\n${escapeMarkdown(n.text)}\n\n${n.illustrative ? "_Illustrative sample note._\n\n" : ""}Position: x=${n.x.toFixed(4)}, y=${n.y.toFixed(4)}\n\n![Annotated frame ${n.number}](${n.image})\n`).join("\n")}\nMade with Frame Notes by ToanKhonTech.\n`;
 }
