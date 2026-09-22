@@ -25,7 +25,7 @@ New exports include a SHA-256 fingerprint of the complete video file in `review.
 - **Different source file:** a trim, re-encode, metadata edit, or other byte change produces a mismatch. Use the original source or make a new review.
 - **Source not verified:** a version 1 review without a fingerprint cannot identify the original file. Matching filenames and durations are insufficient.
 
-Hashing runs in a Web Worker, reads 4 MiB at a time, and can be cancelled. Changing either file or closing the dialog cancels the previous check and clears its result. JSON reviews are limited to 2 MiB; video hashing has no fixed size cap. Browser resources and codec support still limit video editing.
+Local-file hashing runs in a Web Worker, reads 4 MiB at a time, and can be cancelled. The bundled demo’s fingerprint is computed from its exact asset during the build, so exporting it does not download the whole clip again. Changing either file or closing the dialog cancels the previous check and clears its result. JSON reviews are limited to 2 MiB; video hashing has no fixed size cap. Browser resources and codec support still limit video editing.
 
 This checks exact file identity, not visual similarity, and does not remap timestamps after an edit. A fingerprint is not a signature: it does not authenticate the review’s author or prove the metadata has not been modified.
 

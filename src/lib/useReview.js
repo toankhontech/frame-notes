@@ -316,17 +316,12 @@ export default function useReview() {
     setError("");
     setStatus("Preparing review…");
     try {
-      let file = sourceFile.current;
-      if (!file) {
-        const response = await fetch(demoUrl, { signal: controller.signal });
-        if (!response.ok)
-          throw new Error("Could not read the demo source. Try again.");
-        file = await response.blob();
-      }
-      const fingerprint = await hashFile(file, {
-        signal: controller.signal,
-        onProgress: (value) => setStatus(`Identifying source video… ${value}%`),
-      });
+      const fingerprint = sourceFile.current
+        ? await hashFile(sourceFile.current, {
+            signal: controller.signal,
+            onProgress: (value) => setStatus(`Identifying source video… ${value}%`),
+          })
+        : __DEMO_FINGERPRINT__;
       exportController.current = null;
       await exportReview({ ...meta, fingerprint }, notes, setStatus);
       setDirty(false);
