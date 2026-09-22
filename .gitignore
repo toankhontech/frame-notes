@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.DS_Store
+*.local
+
+# Local design and test evidence
+docs/design/
+docs/qa/
+docs/design-evidence.json
+docs/QUYET-DINH-THIET-KE.md
